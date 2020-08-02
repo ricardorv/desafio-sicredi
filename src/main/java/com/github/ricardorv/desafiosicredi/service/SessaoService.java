@@ -1,9 +1,6 @@
 package com.github.ricardorv.desafiosicredi.service;
 
-import com.github.ricardorv.desafiosicredi.api.v1.dto.AssociadoDto;
-import com.github.ricardorv.desafiosicredi.api.v1.dto.PautaDto;
-import com.github.ricardorv.desafiosicredi.api.v1.dto.ResultadoVotacaoDto;
-import com.github.ricardorv.desafiosicredi.api.v1.dto.SessaoDto;
+import com.github.ricardorv.desafiosicredi.api.v1.dto.*;
 import com.github.ricardorv.desafiosicredi.enums.VotoEnum;
 import com.github.ricardorv.desafiosicredi.exception.SessaoJaExpirouException;
 import com.github.ricardorv.desafiosicredi.exception.SessaoJaIniciadaException;
@@ -16,7 +13,7 @@ public interface SessaoService {
     SessaoDto iniciarSessao (PautaDto pauta, Integer duracaoMinutos)
             throws SessaoJaIniciadaException;
 
-    void votar(SessaoDto sessao, AssociadoDto associado, VotoEnum voto)
+    void votar(VotoDto votoDto)
             throws VotoJaComputadoException, SessaoJaExpirouException, EntityNotFoundException;
 
     ResultadoVotacaoDto contabilizarVotos(SessaoDto sessao)

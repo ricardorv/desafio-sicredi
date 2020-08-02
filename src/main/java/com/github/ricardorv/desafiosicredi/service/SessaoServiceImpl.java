@@ -1,9 +1,6 @@
 package com.github.ricardorv.desafiosicredi.service;
 
-import com.github.ricardorv.desafiosicredi.api.v1.dto.AssociadoDto;
-import com.github.ricardorv.desafiosicredi.api.v1.dto.PautaDto;
-import com.github.ricardorv.desafiosicredi.api.v1.dto.ResultadoVotacaoDto;
-import com.github.ricardorv.desafiosicredi.api.v1.dto.SessaoDto;
+import com.github.ricardorv.desafiosicredi.api.v1.dto.*;
 import com.github.ricardorv.desafiosicredi.entity.Associado;
 import com.github.ricardorv.desafiosicredi.entity.Pauta;
 import com.github.ricardorv.desafiosicredi.entity.Sessao;
@@ -72,31 +69,31 @@ public class SessaoServiceImpl implements SessaoService {
     }
 
     @Override
-    public void votar(SessaoDto sessaoDto, AssociadoDto associadoDto, VotoEnum votoEnum)
+    public void votar(VotoDto votoDto)
             throws VotoJaComputadoException, SessaoJaExpirouException, EntityNotFoundException {
 
         LocalDateTime localDateTimeAtual = LocalDateTime.now();
 
         Optional<Voto> votoOpt = votoRepository
-                .findBySessaoIdAndAssociadoId(sessaoDto.getId(), associadoDto.getId());
+                .findBySessaoIdAndAssociadoToken(votoDto.getIdSessao(), votoDto.getToken());
 
         if (votoOpt.isPresent()) {
             throw new VotoJaComputadoException();
         }
 
 
-        Sessao sessao = sessaoRepository.getOne(sessaoDto.getId());
+        Sessao sessao = sessaoRepository.getOne(votoDto.getIdSessao());
         if (localDateTimeAtual.isAfter(sessao.getFimSessao())) {
             throw new SessaoJaExpirouException();
         }
 
-        Associado associado = associadoRepository.findByToken(associadoDto.getToken());
+        Associado associado = associadoRepository.findByToken(votoDto.getToken());
 
         Voto voto = new Voto();
         voto.setAssociado(associado);
         voto.setDthrInserido(localDateTimeAtual);
         voto.setSessao(sessao);
-        voto.setVoto(votoEnum);
+        voto.setVoto(votoDto.getVoto());
         votoRepository.save(voto);
 
     }
