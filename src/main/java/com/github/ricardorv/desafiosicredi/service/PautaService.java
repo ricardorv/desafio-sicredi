@@ -11,6 +11,6 @@ public interface PautaService {
 
     List<PautaDto> buscarPautas();
 
-    PautaDto buscarPauta() throws EntityNotFoundException;
+    PautaDto buscarPauta(Long id) throws EntityNotFoundException;
 
 }

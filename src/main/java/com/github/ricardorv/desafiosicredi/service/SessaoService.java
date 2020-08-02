@@ -13,7 +13,7 @@ import javax.persistence.EntityNotFoundException;
 
 public interface SessaoService {
 
-    SessaoDto iniciarSessao (SessaoDto sessao, PautaDto pauta, Integer duracaoMinutos)
+    SessaoDto iniciarSessao (PautaDto pauta, Integer duracaoMinutos)
             throws SessaoJaIniciadaException;
 
     void votar(SessaoDto sessao, AssociadoDto associado, VotoEnum voto)

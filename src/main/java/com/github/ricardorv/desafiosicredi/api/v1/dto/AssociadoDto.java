@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class AssociadoDto {
     private Long id;
     private String cpf;
+    private String token;
 }
