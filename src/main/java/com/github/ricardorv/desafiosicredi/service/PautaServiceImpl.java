@@ -3,11 +3,13 @@ package com.github.ricardorv.desafiosicredi.service;
 import com.github.ricardorv.desafiosicredi.api.v1.dto.PautaDto;
 import com.github.ricardorv.desafiosicredi.entity.Pauta;
 import com.github.ricardorv.desafiosicredi.repository.PautaRepository;
+import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class PautaServiceImpl implements PautaService {
 
     PautaRepository pautaRepository;

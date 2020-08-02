@@ -16,11 +16,13 @@ import com.github.ricardorv.desafiosicredi.repository.AssociadoRepository;
 import com.github.ricardorv.desafiosicredi.repository.PautaRepository;
 import com.github.ricardorv.desafiosicredi.repository.SessaoRepository;
 import com.github.ricardorv.desafiosicredi.repository.VotoRepository;
+import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+@Service
 public class SessaoServiceImpl implements SessaoService {
 
     PautaRepository pautaRepository;
@@ -28,6 +30,15 @@ public class SessaoServiceImpl implements SessaoService {
     AssociadoRepository associadoRepository;
     VotoRepository votoRepository;
 
+    public SessaoServiceImpl(PautaRepository pautaRepository,
+                             SessaoRepository sessaoRepository,
+                             AssociadoRepository associadoRepository,
+                             VotoRepository votoRepository) {
+        this.pautaRepository = pautaRepository;
+        this.sessaoRepository = sessaoRepository;
+        this.associadoRepository = associadoRepository;
+        this.votoRepository = votoRepository;
+    }
 
     @Override
     public SessaoDto iniciarSessao(PautaDto pautaDto, Integer duracaoMinutos)
