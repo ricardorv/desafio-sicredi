@@ -1,11 +1,13 @@
 package com.github.ricardorv.desafiosicredi.service;
 
-import com.github.ricardorv.desafiosicredi.api.v1.dto.*;
+import com.github.ricardorv.desafiosicredi.api.v1.dto.PautaDto;
+import com.github.ricardorv.desafiosicredi.api.v1.dto.ResultadoVotacaoDto;
+import com.github.ricardorv.desafiosicredi.api.v1.dto.SessaoDto;
+import com.github.ricardorv.desafiosicredi.api.v1.dto.VotoDto;
 import com.github.ricardorv.desafiosicredi.entity.Associado;
 import com.github.ricardorv.desafiosicredi.entity.Pauta;
 import com.github.ricardorv.desafiosicredi.entity.Sessao;
 import com.github.ricardorv.desafiosicredi.entity.Voto;
-import com.github.ricardorv.desafiosicredi.enums.VotoEnum;
 import com.github.ricardorv.desafiosicredi.exception.SessaoJaExpirouException;
 import com.github.ricardorv.desafiosicredi.exception.SessaoJaIniciadaException;
 import com.github.ricardorv.desafiosicredi.exception.VotoJaComputadoException;
@@ -53,7 +55,7 @@ public class SessaoServiceImpl implements SessaoService {
 
         Sessao sessao = new Sessao();
         sessao.setPauta(pauta);
-        sessao.setDuracaoMinutos(duracaoMinutos);
+        sessao.setDuracaoMinutos(minutos);
         sessao.setInicioSessao(LocalDateTime.now());
         sessao.setFimSessao(sessao.getInicioSessao().plusMinutes(minutos));
 
