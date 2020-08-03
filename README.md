@@ -22,5 +22,4 @@
 #### Observações
  - É possivel escolher entre persistir ou não os dados após o termino da aplicação, para isso, altere o 
  arquivo application.properties.
- - O projeto insere dados na tabela ASSOCIADOS. Caso esteja configurado para persistir em arquivo, alguns erros 
- serão exibidos ao executar pela segunda vez (irei ajustar isso no futuro).
+ - Para votar é necessário informar o token. Os tokens válidos são: token1, token2, token3 e token4.

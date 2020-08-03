@@ -1,4 +1,4 @@
-INSERT INTO ASSOCIADO (id, cpf, token) VALUES (1, '79768438002', 'token1');
-INSERT INTO ASSOCIADO (id, cpf, token) VALUES (2, '03893367004', 'token2');
-INSERT INTO ASSOCIADO (id, cpf, token) VALUES (3, '67342274054', 'token3');
-INSERT INTO ASSOCIADO (id, cpf, token) VALUES (4, '53684932078', 'token4');
+MERGE INTO ASSOCIADO (id, token) VALUES (1, 'token1');
+MERGE INTO ASSOCIADO (id, token) VALUES (2, 'token2');
+MERGE INTO ASSOCIADO (id, token) VALUES (3, 'token3');
+MERGE INTO ASSOCIADO (id, token) VALUES (4, 'token4');
