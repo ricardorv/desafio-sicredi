@@ -15,7 +15,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class ResultadoVotacaoDto {
 
-    Map<VotoEnum, Integer> quantidadeVotos;
+    Map<VotoEnum, Long> quantidadeVotos;
     LocalDateTime encerramento;
 
 }

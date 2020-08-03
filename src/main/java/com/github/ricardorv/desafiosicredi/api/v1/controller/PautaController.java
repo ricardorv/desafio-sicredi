@@ -3,7 +3,6 @@ package com.github.ricardorv.desafiosicredi.api.v1.controller;
 import com.github.ricardorv.desafiosicredi.api.v1.dto.PautaDto;
 import com.github.ricardorv.desafiosicredi.api.v1.dto.SessaoDto;
 import com.github.ricardorv.desafiosicredi.api.v1.dto.VotoDto;
-import com.github.ricardorv.desafiosicredi.exception.VotoJaComputadoException;
 import com.github.ricardorv.desafiosicredi.service.PautaService;
 import com.github.ricardorv.desafiosicredi.service.SessaoService;
 import org.springframework.http.HttpStatus;
@@ -66,6 +65,16 @@ public class PautaController {
         sessaoService.votar(votoDto);
         return ResponseEntity.ok().build();
 
+    }
+
+    @PostMapping("/v1/pauta/{idPauta}/sessao/{idSessao}/contabilizar")
+    public ResponseEntity<Object> contabilizar(
+            @PathVariable Long idPauta,
+            @PathVariable Long idSessao) {
+
+        return ResponseEntity.ok(
+            sessaoService.contabilizarVotos(SessaoDto.builder().id(idSessao).build())
+        );
     }
 
 }

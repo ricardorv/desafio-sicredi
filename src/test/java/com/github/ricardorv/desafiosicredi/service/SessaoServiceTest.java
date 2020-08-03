@@ -1,6 +1,7 @@
 package com.github.ricardorv.desafiosicredi.service;
 
 import com.github.ricardorv.desafiosicredi.api.v1.dto.PautaDto;
+import com.github.ricardorv.desafiosicredi.api.v1.dto.ResultadoVotacaoDto;
 import com.github.ricardorv.desafiosicredi.api.v1.dto.SessaoDto;
 import com.github.ricardorv.desafiosicredi.api.v1.dto.VotoDto;
 import com.github.ricardorv.desafiosicredi.entity.Associado;
@@ -25,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -46,10 +48,12 @@ public class SessaoServiceTest {
     @Mock
     private VotoRepository votoRepository;
 
+    private LocalDateTime now;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
-        LocalDateTime now = LocalDateTime.now();
+        now = LocalDateTime.now();
 
         // pautaRepository
         Pauta pauta = new Pauta(Long.valueOf(1), "Pauta", new ArrayList<>());
@@ -68,15 +72,15 @@ public class SessaoServiceTest {
         Sessao sessao = new Sessao();
         sessao.setId(Long.valueOf(1));
         sessao.setDuracaoMinutos(10);
-        sessao.setInicioSessao(LocalDateTime.now());
-        sessao.setFimSessao(LocalDateTime.now().plusMinutes(10));
+        sessao.setInicioSessao(now);
+        sessao.setFimSessao(now.plusMinutes(10));
         doReturn(sessao).when(sessaoRepository).getOne(Long.valueOf(1));
 
         Sessao sessaoExpirada = new Sessao();
         sessaoExpirada.setId(Long.valueOf(3));
         sessaoExpirada.setDuracaoMinutos(10);
-        sessaoExpirada.setInicioSessao(LocalDateTime.now().minusMinutes(20));
-        sessaoExpirada.setFimSessao(LocalDateTime.now().minusMinutes(10));
+        sessaoExpirada.setInicioSessao(now.minusMinutes(20));
+        sessaoExpirada.setFimSessao(now.minusMinutes(10));
         doReturn(sessaoExpirada).when(sessaoRepository).getOne(Long.valueOf(3));
 
 
@@ -85,7 +89,7 @@ public class SessaoServiceTest {
         associado.setId(Long.valueOf(1));
         associado.setCpf("26161595036");
         associado.setToken("token");
-        doReturn(associado).when(associadoRepository).findByToken("token");
+        doReturn(Optional.ofNullable(associado)).when(associadoRepository).findByToken("token");
 
 
         // votoRepository
@@ -106,6 +110,14 @@ public class SessaoServiceTest {
             voto.setId(Long.valueOf(1));
             return voto;
         });
+        List<Voto> votos = new ArrayList<>();
+        votos.add(new Voto(Long.valueOf(1), now, VotoEnum.NAO, sessao, associado));
+        votos.add(new Voto(Long.valueOf(2), now, VotoEnum.NAO, sessao, associado));
+        votos.add(new Voto(Long.valueOf(3), now, VotoEnum.SIM, sessao, associado));
+        votos.add(new Voto(Long.valueOf(4), now, VotoEnum.SIM, sessao, associado));
+        votos.add(new Voto(Long.valueOf(5), now, VotoEnum.SIM, sessao, associado));
+        doReturn(votos).when(votoRepository).findBySessaoId(Long.valueOf(1));
+
 
         sessaoService = new SessaoServiceImpl(
                 pautaRepository,
@@ -117,13 +129,13 @@ public class SessaoServiceTest {
     }
 
     @Test
-    void iniciarSessao10MinTest() {
+    void iniciarSessaoMinDefaultTest() {
         SessaoDto sessaoDto = sessaoService.iniciarSessao(
                 PautaDto.builder().id(Long.valueOf(1)).build(),
                 null);
 
         Assertions.assertEquals(1, sessaoDto.getId());
-        Assertions.assertEquals(10, sessaoDto.getDuracaoMinutos());
+        Assertions.assertEquals(SessaoServiceImpl.DURACAO_SESSAO_EM_MINUTOS, sessaoDto.getDuracaoMinutos());
 
     }
 
@@ -185,6 +197,15 @@ public class SessaoServiceTest {
                     .idSessao(Long.valueOf(3))
                     .build());
         });
+    }
+
+    @Test
+    void contabilizarVotos() {
+        ResultadoVotacaoDto resultadoVotacaoDto = sessaoService.contabilizarVotos(SessaoDto.builder().id(Long.valueOf(1)).build());
+        Assertions.assertNotNull(resultadoVotacaoDto.getQuantidadeVotos());
+        Assertions.assertEquals(Long.valueOf(2), resultadoVotacaoDto.getQuantidadeVotos().get(VotoEnum.NAO));
+        Assertions.assertEquals(Long.valueOf(3), resultadoVotacaoDto.getQuantidadeVotos().get(VotoEnum.SIM));
+        Assertions.assertEquals(now.plusMinutes(10), resultadoVotacaoDto.getEncerramento());
     }
 
 }
