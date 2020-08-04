@@ -9,9 +9,7 @@ import com.github.ricardorv.desafiosicredi.entity.Pauta;
 import com.github.ricardorv.desafiosicredi.entity.Sessao;
 import com.github.ricardorv.desafiosicredi.entity.Voto;
 import com.github.ricardorv.desafiosicredi.enums.VotoEnum;
-import com.github.ricardorv.desafiosicredi.exception.SessaoJaExpirouException;
-import com.github.ricardorv.desafiosicredi.exception.SessaoJaIniciadaException;
-import com.github.ricardorv.desafiosicredi.exception.VotoJaComputadoException;
+import com.github.ricardorv.desafiosicredi.exception.*;
 import com.github.ricardorv.desafiosicredi.repository.AssociadoRepository;
 import com.github.ricardorv.desafiosicredi.repository.PautaRepository;
 import com.github.ricardorv.desafiosicredi.repository.SessaoRepository;
@@ -23,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,8 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 public class SessaoServiceTest {
@@ -47,6 +45,8 @@ public class SessaoServiceTest {
     private AssociadoRepository associadoRepository;
     @Mock
     private VotoRepository votoRepository;
+    @Mock
+    private AssociadoService associadoService;
 
     private LocalDateTime now;
 
@@ -118,12 +118,17 @@ public class SessaoServiceTest {
         votos.add(new Voto(Long.valueOf(5), now, VotoEnum.SIM, sessao, associado));
         doReturn(votos).when(votoRepository).findBySessaoId(Long.valueOf(1));
 
+        // AssociadoService
+        doReturn(Boolean.TRUE).when(associadoService).podeVotar("12312312300");
+        doReturn(Boolean.FALSE).when(associadoService).podeVotar("12312312311");
+        doThrow(CpfInvalidoException.class).when(associadoService).podeVotar("12312312322");
 
         sessaoService = new SessaoServiceImpl(
                 pautaRepository,
                 sessaoRepository,
                 associadoRepository,
-                votoRepository
+                votoRepository,
+                associadoService
         );
 
     }
@@ -168,11 +173,35 @@ public class SessaoServiceTest {
     void votar() {
         sessaoService.votar(VotoDto.builder()
                 .voto(VotoEnum.SIM)
-                .cpf("26161595036")
+                .cpf("12312312300")
                 .token("token")
                 .idSessao(Long.valueOf(1))
                 .build());
 
+    }
+
+    @Test
+    void votarCpfNaoPode() {
+        Assertions.assertThrows(CpfNaoPodeVotarException.class, () -> {
+            sessaoService.votar(VotoDto.builder()
+                    .voto(VotoEnum.SIM)
+                    .cpf("12312312311")
+                    .token("token")
+                    .idSessao(Long.valueOf(1))
+                    .build());
+        });
+    }
+
+    @Test
+    void votarCpfInvalido() {
+        Assertions.assertThrows(CpfInvalidoException.class, () -> {
+            sessaoService.votar(VotoDto.builder()
+                    .voto(VotoEnum.SIM)
+                    .cpf("12312312322")
+                    .token("token")
+                    .idSessao(Long.valueOf(1))
+                    .build());
+        });
     }
 
     @Test

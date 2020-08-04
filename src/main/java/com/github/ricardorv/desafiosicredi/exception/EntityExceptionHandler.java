@@ -41,5 +41,18 @@ public class EntityExceptionHandler extends ResponseEntityExceptionHandler {
                 new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
     }
 
+    @ExceptionHandler(value = { CpfInvalidoException.class })
+    protected ResponseEntity<Object> handleCpfInvalido(RuntimeException ex, WebRequest request) {
+        String bodyOfResponse = "CPF Inválido";
+        return handleExceptionInternal(ex, bodyOfResponse,
+                new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(value = { CpfNaoPodeVotarException.class })
+    protected ResponseEntity<Object> handleCpfNaoPodeVotar(RuntimeException ex, WebRequest request) {
+        String bodyOfResponse = "CPF não pode votar";
+        return handleExceptionInternal(ex, bodyOfResponse,
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
 
 }

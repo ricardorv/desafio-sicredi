@@ -9,9 +9,7 @@ import com.github.ricardorv.desafiosicredi.entity.Pauta;
 import com.github.ricardorv.desafiosicredi.entity.Sessao;
 import com.github.ricardorv.desafiosicredi.entity.Voto;
 import com.github.ricardorv.desafiosicredi.enums.VotoEnum;
-import com.github.ricardorv.desafiosicredi.exception.SessaoJaExpirouException;
-import com.github.ricardorv.desafiosicredi.exception.SessaoJaIniciadaException;
-import com.github.ricardorv.desafiosicredi.exception.VotoJaComputadoException;
+import com.github.ricardorv.desafiosicredi.exception.*;
 import com.github.ricardorv.desafiosicredi.repository.AssociadoRepository;
 import com.github.ricardorv.desafiosicredi.repository.PautaRepository;
 import com.github.ricardorv.desafiosicredi.repository.SessaoRepository;
@@ -19,6 +17,7 @@ import com.github.ricardorv.desafiosicredi.repository.VotoRepository;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -34,15 +33,18 @@ public class SessaoServiceImpl implements SessaoService {
     SessaoRepository sessaoRepository;
     AssociadoRepository associadoRepository;
     VotoRepository votoRepository;
+    AssociadoService associadoService;
 
     public SessaoServiceImpl(PautaRepository pautaRepository,
                              SessaoRepository sessaoRepository,
                              AssociadoRepository associadoRepository,
-                             VotoRepository votoRepository) {
+                             VotoRepository votoRepository,
+                             AssociadoService associadoService) {
         this.pautaRepository = pautaRepository;
         this.sessaoRepository = sessaoRepository;
         this.associadoRepository = associadoRepository;
         this.votoRepository = votoRepository;
+        this.associadoService = associadoService;
     }
 
     @Override
@@ -100,8 +102,17 @@ public class SessaoServiceImpl implements SessaoService {
             throw new EntityNotFoundException();
         }
 
+        Boolean podeVotar = associadoService.podeVotar(votoDto.getCpf());
+        if(!podeVotar) {
+            throw new CpfNaoPodeVotarException();
+        }
+
+        Associado associado = associadoOpt.get();
+        associado.setCpf(votoDto.getCpf());
+        associadoRepository.save(associado);
+
         Voto voto = new Voto();
-        voto.setAssociado(associadoOpt.get());
+        voto.setAssociado(associado);
         voto.setDthrInserido(localDateTimeAtual);
         voto.setSessao(sessao);
         voto.setVoto(votoDto.getVoto());
