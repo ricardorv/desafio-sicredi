@@ -29,11 +29,11 @@ public class SessaoServiceImpl implements SessaoService {
 
     public static Integer DURACAO_SESSAO_EM_MINUTOS = 1;
 
-    PautaRepository pautaRepository;
-    SessaoRepository sessaoRepository;
-    AssociadoRepository associadoRepository;
-    VotoRepository votoRepository;
-    AssociadoService associadoService;
+    private final PautaRepository pautaRepository;
+    private final SessaoRepository sessaoRepository;
+    private final AssociadoRepository associadoRepository;
+    private final VotoRepository votoRepository;
+    private final AssociadoService associadoService;
 
     public SessaoServiceImpl(PautaRepository pautaRepository,
                              SessaoRepository sessaoRepository,

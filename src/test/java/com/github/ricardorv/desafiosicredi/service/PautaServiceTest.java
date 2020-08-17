@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
@@ -16,13 +15,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest
 public class PautaServiceTest {
 
-    @Mock
     private PautaService pautaService;
 
     @Mock
@@ -31,27 +27,24 @@ public class PautaServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
-
-        Pauta pauta = new Pauta(Long.valueOf(1), "Pauta", new ArrayList<>());
-
-        doReturn(pauta).when(pautaRepository).save(any());
-        doReturn(Arrays.asList(pauta)).when(pautaRepository).findAll();
-        doReturn(pauta).when(pautaRepository).getOne(Long.valueOf(1));
-        doThrow(EntityNotFoundException.class).when(pautaRepository).getOne(Long.valueOf(2));
-
         pautaService = new PautaServiceImpl(pautaRepository);
     }
 
     @Test
     void cadastrarPautaTest() {
+        when(pautaRepository.save(any())).thenReturn(new Pauta(1L, "Pauta", new ArrayList<>()));
+
         PautaDto pautaDto = pautaService.cadastrarPauta("Pauta");
         Assertions.assertNotNull(pautaDto);
         Assertions.assertEquals("Pauta", pautaDto.getNome());
-        Assertions.assertEquals(Long.valueOf(1), pautaDto.getId());
+        Assertions.assertEquals(1L, pautaDto.getId());
     }
 
     @Test
     void buscarPautasTest() {
+        Pauta pauta = new Pauta(1L, "Pauta", new ArrayList<>());
+        when(pautaRepository.findAll()).thenReturn(Arrays.asList(pauta));
+
         List<PautaDto> pautasDto = pautaService.buscarPautas();
         Assertions.assertNotNull(pautasDto);
         Assertions.assertEquals(1, pautasDto.size());
@@ -60,16 +53,19 @@ public class PautaServiceTest {
 
     @Test
     void buscarPautaTest() {
-        PautaDto pautaDto = pautaService.buscarPauta(Long.valueOf(1));
+        when(pautaRepository.getOne(1L)).thenReturn(new Pauta(1L, "Pauta", new ArrayList<>()));
+
+        PautaDto pautaDto = pautaService.buscarPauta(1L);
         Assertions.assertNotNull(pautaDto);
         Assertions.assertEquals("Pauta", pautaDto.getNome());
-        Assertions.assertEquals(Long.valueOf(1), pautaDto.getId());
+        Assertions.assertEquals(1L, pautaDto.getId());
     }
 
     @Test
     void buscarPautaNaoExisteTest() {
+        when(pautaRepository.getOne(2L)).thenThrow(EntityNotFoundException.class);
         Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            PautaDto pautaDto = pautaService.buscarPauta(Long.valueOf(2));
+            PautaDto pautaDto = pautaService.buscarPauta(2L);
         });
     }
 }
