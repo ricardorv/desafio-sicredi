@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.ricardorv.desafiosicredi.enums.StatusCpfEnum;
 import com.github.ricardorv.desafiosicredi.exception.CpfInvalidoException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.EntityNotFoundException;
 import java.io.BufferedReader;
@@ -18,36 +20,15 @@ import java.net.URL;
 public class UserInfoClient {
 
     public UserInfoDto getUser(String cpf) {
-        BufferedReader in = null;
-        try {
-            URL url = new URL("https://user-info.herokuapp.com/users/".concat(cpf));
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
+        RestTemplate restTemplate = new RestTemplate();
+        String resourceUrl = "https://user-info.herokuapp.com/users/";
+        ResponseEntity<UserInfoDto> response = restTemplate.getForEntity(resourceUrl.concat(cpf), UserInfoDto.class);
 
-            int httpStatus = con.getResponseCode();
-            if (HttpStatus.NOT_FOUND.value() == httpStatus) {
-                throw new CpfInvalidoException();
-            }
-
-            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuffer content = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            UserInfoDto userInfoDto = objectMapper.readValue(content.toString(), UserInfoDto.class);
-
-            return userInfoDto;
-        } catch (IOException e) {
-            throw new EntityNotFoundException(e.getMessage());
-        } finally {
-            try {
-                in.close();
-            } catch (Exception ex) {
-            }
+        if (response.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+            throw new CpfInvalidoException();
         }
+
+        return response.getBody();
     }
 
 
