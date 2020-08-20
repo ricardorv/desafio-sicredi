@@ -7,6 +7,7 @@ import com.github.ricardorv.desafiosicredi.exception.CpfInvalidoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.EntityNotFoundException;
@@ -22,13 +23,16 @@ public class UserInfoClient {
     public UserInfoDto getUser(String cpf) {
         RestTemplate restTemplate = new RestTemplate();
         String resourceUrl = "https://user-info.herokuapp.com/users/";
-        ResponseEntity<UserInfoDto> response = restTemplate.getForEntity(resourceUrl.concat(cpf), UserInfoDto.class);
 
-        if (response.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-            throw new CpfInvalidoException();
+        try {
+            ResponseEntity<UserInfoDto> response = restTemplate.getForEntity(resourceUrl.concat(cpf), UserInfoDto.class);
+            return response.getBody();
+        } catch (HttpClientErrorException ex) {
+            if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                throw new CpfInvalidoException();
+            }
+            throw ex;
         }
-
-        return response.getBody();
     }
 
 
