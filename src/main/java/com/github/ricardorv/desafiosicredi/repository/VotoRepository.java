@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface VotoRepository extends JpaRepository<Voto, Long> {
 
-    Optional<Voto> findBySessaoIdAndAssociadoToken(Long sessaoId, String associadoToken);
+    Optional<Voto> findBySessaoIdAndAssociadoUsuario(Long sessaoId, String associadoUsuario);
 
     List<Voto> findBySessaoId(Long sessaoId);
 

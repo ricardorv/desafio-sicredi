@@ -113,7 +113,7 @@ public class SessaoServiceTest {
     @Test
     void votar() {
 
-        when(votoRepository.findBySessaoIdAndAssociadoToken(1L, "token"))
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
                 .thenReturn(Optional.ofNullable(null));
 
         LocalDateTime now = LocalDateTime.now();
@@ -128,14 +128,14 @@ public class SessaoServiceTest {
         Associado associado = new Associado();
         associado.setId(1L);
         associado.setCpf("12312312300");
-        associado.setToken("token");
-        when(associadoRepository.findByToken("token")).thenReturn(Optional.ofNullable(associado));
+        associado.setUsuario("usuario");
+        when(associadoRepository.findByUsuario("usuario")).thenReturn(Optional.ofNullable(associado));
         when(associadoService.podeVotar("12312312300")).thenReturn(Boolean.TRUE);
 
         sessaoService.votar(VotoDto.builder()
                 .voto(VotoEnum.SIM)
                 .cpf("12312312300")
-                .token("token")
+                .usuario("usuario")
                 .idSessao(1L)
                 .build());
 
@@ -144,7 +144,7 @@ public class SessaoServiceTest {
     @Test
     void votarCpfNaoPode() {
 
-        when(votoRepository.findBySessaoIdAndAssociadoToken(1L, "token"))
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
                 .thenReturn(Optional.ofNullable(null));
 
         LocalDateTime now = LocalDateTime.now();
@@ -159,8 +159,8 @@ public class SessaoServiceTest {
         Associado associado = new Associado();
         associado.setId(1L);
         associado.setCpf("12312312300");
-        associado.setToken("token");
-        when(associadoRepository.findByToken("token")).thenReturn(Optional.ofNullable(associado));
+        associado.setUsuario("usuario");
+        when(associadoRepository.findByUsuario("usuario")).thenReturn(Optional.ofNullable(associado));
 
         when(associadoService.podeVotar("12312312311")).thenReturn(Boolean.FALSE);
 
@@ -168,7 +168,7 @@ public class SessaoServiceTest {
             sessaoService.votar(VotoDto.builder()
                     .voto(VotoEnum.SIM)
                     .cpf("12312312311")
-                    .token("token")
+                    .usuario("usuario")
                     .idSessao(1L)
                     .build());
         });
@@ -177,7 +177,7 @@ public class SessaoServiceTest {
     @Test
     void votarCpfInvalido() {
 
-        when(votoRepository.findBySessaoIdAndAssociadoToken(1L, "token"))
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
                 .thenReturn(Optional.ofNullable(null));
 
         LocalDateTime now = LocalDateTime.now();
@@ -192,8 +192,8 @@ public class SessaoServiceTest {
         Associado associado = new Associado();
         associado.setId(1L);
         associado.setCpf("12312312300");
-        associado.setToken("token");
-        when(associadoRepository.findByToken("token")).thenReturn(Optional.ofNullable(associado));
+        associado.setUsuario("usuario");
+        when(associadoRepository.findByUsuario("usuario")).thenReturn(Optional.ofNullable(associado));
 
         when(associadoService.podeVotar("12312312322")).thenThrow(CpfInvalidoException.class);
 
@@ -201,7 +201,7 @@ public class SessaoServiceTest {
             sessaoService.votar(VotoDto.builder()
                     .voto(VotoEnum.SIM)
                     .cpf("12312312322")
-                    .token("token")
+                    .usuario("usuario")
                     .idSessao(1L)
                     .build());
         });
@@ -210,14 +210,14 @@ public class SessaoServiceTest {
     @Test
     void votarJaComputado() {
 
-        when(votoRepository.findBySessaoIdAndAssociadoToken(1L, "token"))
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
                 .thenReturn(Optional.ofNullable(new Voto()));
 
         Assertions.assertThrows(VotoJaComputadoException.class, () -> {
             sessaoService.votar(VotoDto.builder()
                     .voto(VotoEnum.SIM)
                     .cpf("26161595036")
-                    .token("token")
+                    .usuario("usuario")
                     .idSessao(1L)
                     .build());
         });
@@ -228,7 +228,7 @@ public class SessaoServiceTest {
 
         LocalDateTime now = LocalDateTime.now();
 
-        when(votoRepository.findBySessaoIdAndAssociadoToken(1L, "token"))
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
                 .thenReturn(Optional.ofNullable(null));
         Sessao sessaoExpirada = new Sessao();
         sessaoExpirada.setId(3L);
@@ -241,7 +241,7 @@ public class SessaoServiceTest {
             sessaoService.votar(VotoDto.builder()
                     .voto(VotoEnum.SIM)
                     .cpf("26161595036")
-                    .token("token")
+                    .usuario("usuario")
                     .idSessao(3L)
                     .build());
         });

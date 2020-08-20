@@ -88,7 +88,7 @@ public class SessaoServiceImpl implements SessaoService {
         LocalDateTime localDateTimeAtual = LocalDateTime.now();
 
         Optional<Voto> votoOpt = votoRepository
-                .findBySessaoIdAndAssociadoToken(votoDto.getIdSessao(), votoDto.getToken());
+                .findBySessaoIdAndAssociadoUsuario(votoDto.getIdSessao(), votoDto.getUsuario());
 
         if (votoOpt.isPresent()) {
             throw new VotoJaComputadoException();
@@ -103,7 +103,7 @@ public class SessaoServiceImpl implements SessaoService {
             throw new SessaoJaExpirouException();
         }
 
-        Optional<Associado> associadoOpt = associadoRepository.findByToken(votoDto.getToken());
+        Optional<Associado> associadoOpt = associadoRepository.findByUsuario(votoDto.getUsuario());
         if (!associadoOpt.isPresent()) {
             throw new EntityNotFoundException();
         }

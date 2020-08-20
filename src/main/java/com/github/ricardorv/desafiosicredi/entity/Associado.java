@@ -22,6 +22,6 @@ public class Associado {
     private Long id;
     @Column(unique = true)
     private String cpf;
-    private String token;
+    private String usuario;
 
 }
