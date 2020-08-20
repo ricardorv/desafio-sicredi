@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.jms.core.JmsTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,6 +44,8 @@ public class SessaoServiceTest {
     private VotoRepository votoRepository;
     @Mock
     private AssociadoService associadoService;
+    @Mock
+    private JmsTemplate jmsTemplate;
 
     @BeforeEach
     void setUp() {
@@ -53,7 +56,8 @@ public class SessaoServiceTest {
                 sessaoRepository,
                 associadoRepository,
                 votoRepository,
-                associadoService
+                associadoService,
+                jmsTemplate
         );
 
     }
@@ -262,7 +266,7 @@ public class SessaoServiceTest {
         votos.add(new Voto(5L, now, VotoEnum.SIM, sessao, new Associado()));
         doReturn(votos).when(votoRepository).findBySessaoId(1L);
 
-        ResultadoVotacaoDto resultadoVotacaoDto = sessaoService.contabilizarVotos(SessaoDto.builder().id(1L).build());
+        ResultadoVotacaoDto resultadoVotacaoDto = sessaoService.contabilizarVotos(1L);
         Assertions.assertNotNull(resultadoVotacaoDto.getQuantidadeVotos());
         Assertions.assertEquals(2L, resultadoVotacaoDto.getQuantidadeVotos().get(VotoEnum.NAO));
         Assertions.assertEquals(3L, resultadoVotacaoDto.getQuantidadeVotos().get(VotoEnum.SIM));

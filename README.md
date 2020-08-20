@@ -6,6 +6,10 @@
     cd desafio-sicredi
     ./mvnw spring-boot:run
        
+#### Executar o activeMq localmente
+
+    docker run -p 61616:61616 -p 8161:8161 rmohr/activemq
+       
 #### Documentação da API:
 
     http://localhost:8080/swagger-ui.html

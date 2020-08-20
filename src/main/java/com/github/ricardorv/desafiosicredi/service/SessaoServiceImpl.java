@@ -14,10 +14,10 @@ import com.github.ricardorv.desafiosicredi.repository.AssociadoRepository;
 import com.github.ricardorv.desafiosicredi.repository.PautaRepository;
 import com.github.ricardorv.desafiosicredi.repository.SessaoRepository;
 import com.github.ricardorv.desafiosicredi.repository.VotoRepository;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -34,17 +34,20 @@ public class SessaoServiceImpl implements SessaoService {
     private final AssociadoRepository associadoRepository;
     private final VotoRepository votoRepository;
     private final AssociadoService associadoService;
+    private final JmsTemplate jmsTemplate;
 
     public SessaoServiceImpl(PautaRepository pautaRepository,
                              SessaoRepository sessaoRepository,
                              AssociadoRepository associadoRepository,
                              VotoRepository votoRepository,
-                             AssociadoService associadoService) {
+                             AssociadoService associadoService,
+                             JmsTemplate jmsTemplate) {
         this.pautaRepository = pautaRepository;
         this.sessaoRepository = sessaoRepository;
         this.associadoRepository = associadoRepository;
         this.votoRepository = votoRepository;
         this.associadoService = associadoService;
+        this.jmsTemplate = jmsTemplate;
     }
 
     @Override
@@ -94,6 +97,9 @@ public class SessaoServiceImpl implements SessaoService {
 
         Sessao sessao = sessaoRepository.getOne(votoDto.getIdSessao());
         if (localDateTimeAtual.isAfter(sessao.getFimSessao())) {
+            if (!sessao.getEncerrada()) {
+                encerrarSessao(sessao);
+            }
             throw new SessaoJaExpirouException();
         }
 
@@ -120,20 +126,43 @@ public class SessaoServiceImpl implements SessaoService {
 
     }
 
-    @Override
-    public ResultadoVotacaoDto contabilizarVotos(SessaoDto sessaoDto) throws EntityNotFoundException {
+    private void encerrarSessao(Sessao sessao) {
+        sessao.setEncerrada(Boolean.TRUE);
+        sessaoRepository.save(sessao);
+        ResultadoVotacaoDto resultado = contabilizarVotos(sessao.getId());
+        notificaEncerramentoSessao(resultado);
+    }
 
-        Sessao sessao = sessaoRepository.getOne(sessaoDto.getId());
-        List<Voto> votos = votoRepository.findBySessaoId(sessaoDto.getId());
+    @Override
+    public ResultadoVotacaoDto contabilizarVotos(Long idSessao) throws EntityNotFoundException {
+
+        Sessao sessao = sessaoRepository.getOne(idSessao);
+        List<Voto> votos = votoRepository.findBySessaoId(idSessao);
+
+        if (LocalDateTime.now().isAfter(sessao.getFimSessao())) {
+            if (!sessao.getEncerrada()) {
+                encerrarSessao(sessao);
+            }
+        }
 
         Map<VotoEnum, Long> votosMap = votos.stream()
                 .collect(Collectors.groupingBy(o -> o.getVoto(), Collectors.counting()));
 
-        return ResultadoVotacaoDto.builder()
+
+        ResultadoVotacaoDto resultadoVotacao = ResultadoVotacaoDto.builder()
                 .quantidadeVotos(votosMap)
                 .encerramento(sessao.getFimSessao())
                 .build();
 
+        return resultadoVotacao;
+    }
+
+    private void notificaEncerramentoSessao (ResultadoVotacaoDto resultadoVotacaoDto) {
+        try {
+            jmsTemplate.convertAndSend(resultadoVotacaoDto);
+        } catch (Exception ex) {
+
+        }
     }
 
 }

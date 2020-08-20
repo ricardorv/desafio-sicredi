@@ -16,7 +16,7 @@ public interface SessaoService {
     void votar(VotoDto votoDto)
             throws VotoJaComputadoException, SessaoJaExpirouException, EntityNotFoundException;
 
-    ResultadoVotacaoDto contabilizarVotos(SessaoDto sessao)
+    ResultadoVotacaoDto contabilizarVotos(Long idSessao)
             throws EntityNotFoundException;
 
 }
