@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ResultadoVotacaoDto {
+public class ResultadoVotacaoDto implements Serializable {
 
     Map<VotoEnum, Long> quantidadeVotos;
     LocalDateTime encerramento;

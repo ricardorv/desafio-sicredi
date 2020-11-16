@@ -23,5 +23,7 @@ public class Sessao {
     private LocalDateTime fimSessao;
     @ManyToOne
     private Pauta pauta;
+    @Column(nullable = false)
+    private Boolean encerrada = Boolean.FALSE;
 
 }

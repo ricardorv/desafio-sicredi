@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface AssociadoRepository extends JpaRepository<Associado, Long> {
 
-    Optional<Associado> findByToken(String token) throws EntityNotFoundException;
+    Optional<Associado> findByUsuario(String usuario) throws EntityNotFoundException;
 
 }

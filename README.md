@@ -6,6 +6,10 @@
     cd desafio-sicredi
     ./mvnw spring-boot:run
        
+#### Executar o activemq localmente
+
+    docker run -p 61616:61616 -p 8161:8161 rmohr/activemq
+       
 #### Documentação da API:
 
     http://localhost:8080/swagger-ui.html
@@ -20,6 +24,6 @@
     * Caso esteja configurado para salvar em um arquivo, substitua JDBC URL por: jdbc:h2:file:./testdb
     
 #### Observações
- - É possivel escolher entre persistir ou não os dados após o termino da aplicação, para isso, altere o 
+ - É possível escolher entre persistir ou não os dados após o termino da aplicação, para isso, altere o 
  arquivo application.properties.
- - Para votar é necessário informar o token. Os tokens válidos são: token1, token2, token3 e token4.
+ - Para votar é necessário informar o usuário. Os usuários válidos são: usuario1, usuario2, usuario3 e usuario4.

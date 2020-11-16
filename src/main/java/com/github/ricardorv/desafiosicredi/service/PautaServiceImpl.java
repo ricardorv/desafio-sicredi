@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @Service
 public class PautaServiceImpl implements PautaService {
 
-    PautaRepository pautaRepository;
+    private final PautaRepository pautaRepository;
 
     public PautaServiceImpl(PautaRepository pautaRepository) {
         this.pautaRepository = pautaRepository;

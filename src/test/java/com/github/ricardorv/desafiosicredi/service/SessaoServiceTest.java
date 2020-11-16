@@ -19,9 +19,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jms.core.JmsTemplate;
 
-import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,10 +30,8 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
 public class SessaoServiceTest {
 
-    @Mock
     private SessaoService sessaoService;
 
     @Mock
@@ -47,107 +44,53 @@ public class SessaoServiceTest {
     private VotoRepository votoRepository;
     @Mock
     private AssociadoService associadoService;
-
-    private LocalDateTime now;
+    @Mock
+    private JmsTemplate jmsTemplate;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
-        now = LocalDateTime.now();
-
-        // pautaRepository
-        Pauta pauta = new Pauta(Long.valueOf(1), "Pauta", new ArrayList<>());
-        Pauta pautaComSessao = new Pauta(Long.valueOf(2), "Pauta com sessao",
-                Arrays.asList(Sessao.builder().id(Long.valueOf(1)).build()));
-        doReturn(pauta).when(pautaRepository).getOne(Long.valueOf(1));
-        doReturn(pautaComSessao).when(pautaRepository).getOne(Long.valueOf(2));
-
-
-        // sessaoRepository
-        when(sessaoRepository.save(any())).thenAnswer(invocationOnMock -> {
-            Sessao sessao = invocationOnMock.getArgument(0);
-            sessao.setId(Long.valueOf(1));
-            return sessao;
-        });
-        Sessao sessao = new Sessao();
-        sessao.setId(Long.valueOf(1));
-        sessao.setDuracaoMinutos(10);
-        sessao.setInicioSessao(now);
-        sessao.setFimSessao(now.plusMinutes(10));
-        doReturn(sessao).when(sessaoRepository).getOne(Long.valueOf(1));
-
-        Sessao sessaoExpirada = new Sessao();
-        sessaoExpirada.setId(Long.valueOf(3));
-        sessaoExpirada.setDuracaoMinutos(10);
-        sessaoExpirada.setInicioSessao(now.minusMinutes(20));
-        sessaoExpirada.setFimSessao(now.minusMinutes(10));
-        doReturn(sessaoExpirada).when(sessaoRepository).getOne(Long.valueOf(3));
-
-
-        // associadoRepository
-        Associado associado = new Associado();
-        associado.setId(Long.valueOf(1));
-        associado.setCpf("26161595036");
-        associado.setToken("token");
-        doReturn(Optional.ofNullable(associado)).when(associadoRepository).findByToken("token");
-
-
-        // votoRepository
-        doReturn(Optional.ofNullable(null)).when(votoRepository).findBySessaoIdAndAssociadoToken(
-                Long.valueOf(1),
-                "token"
-        );
-        doReturn(Optional.ofNullable(new Voto())).when(votoRepository).findBySessaoIdAndAssociadoToken(
-                Long.valueOf(2),
-                "token"
-        );
-        doReturn(Optional.ofNullable(null)).when(votoRepository).findBySessaoIdAndAssociadoToken(
-                Long.valueOf(3),
-                "token"
-        );
-        when(votoRepository.save(any())).thenAnswer(invocationOnMock -> {
-            Voto voto = invocationOnMock.getArgument(0);
-            voto.setId(Long.valueOf(1));
-            return voto;
-        });
-        List<Voto> votos = new ArrayList<>();
-        votos.add(new Voto(Long.valueOf(1), now, VotoEnum.NAO, sessao, associado));
-        votos.add(new Voto(Long.valueOf(2), now, VotoEnum.NAO, sessao, associado));
-        votos.add(new Voto(Long.valueOf(3), now, VotoEnum.SIM, sessao, associado));
-        votos.add(new Voto(Long.valueOf(4), now, VotoEnum.SIM, sessao, associado));
-        votos.add(new Voto(Long.valueOf(5), now, VotoEnum.SIM, sessao, associado));
-        doReturn(votos).when(votoRepository).findBySessaoId(Long.valueOf(1));
-
-        // AssociadoService
-        doReturn(Boolean.TRUE).when(associadoService).podeVotar("12312312300");
-        doReturn(Boolean.FALSE).when(associadoService).podeVotar("12312312311");
-        doThrow(CpfInvalidoException.class).when(associadoService).podeVotar("12312312322");
 
         sessaoService = new SessaoServiceImpl(
                 pautaRepository,
                 sessaoRepository,
                 associadoRepository,
                 votoRepository,
-                associadoService
+                associadoService,
+                jmsTemplate
         );
 
     }
 
     @Test
     void iniciarSessaoMinDefaultTest() {
+        when(pautaRepository.getOne(1L)).thenReturn(new Pauta(1L, "Pauta", new ArrayList<>()));
+        when(sessaoRepository.save(any())).thenAnswer(invocationOnMock -> {
+            Sessao sessao = invocationOnMock.getArgument(0);
+            sessao.setId(1L);
+            return sessao;
+        });
+
         SessaoDto sessaoDto = sessaoService.iniciarSessao(
-                PautaDto.builder().id(Long.valueOf(1)).build(),
+                PautaDto.builder().id(1L).build(),
                 null);
 
         Assertions.assertEquals(1, sessaoDto.getId());
         Assertions.assertEquals(SessaoServiceImpl.DURACAO_SESSAO_EM_MINUTOS, sessaoDto.getDuracaoMinutos());
-
     }
 
     @Test
     void iniciarSessao20MinTest() {
+
+        when(pautaRepository.getOne(1L)).thenReturn(new Pauta(1L, "Pauta", new ArrayList<>()));
+        when(sessaoRepository.save(any())).thenAnswer(invocationOnMock -> {
+            Sessao sessao = invocationOnMock.getArgument(0);
+            sessao.setId(1L);
+            return sessao;
+        });
+
         SessaoDto sessaoDto = sessaoService.iniciarSessao(
-                PautaDto.builder().id(Long.valueOf(1)).build(),
+                PautaDto.builder().id(1L).build(),
                 20);
 
         Assertions.assertEquals(1, sessaoDto.getId());
@@ -155,15 +98,13 @@ public class SessaoServiceTest {
     }
 
     @Test
-    void iniciarSessaoPeriodoSessao() {
-        //TODO Passar o clock para o service para poder testar as datas
-    }
-
-    @Test
     void iniciarSessaoJaIniciada() {
+
+        when(pautaRepository.getOne(1L)).thenReturn(new Pauta(1L, "Pauta", Arrays.asList(new Sessao())));
+
         Assertions.assertThrows(SessaoJaIniciadaException.class, () -> {
             sessaoService.iniciarSessao(
-                    PautaDto.builder().id(Long.valueOf(2)).build(),
+                    PautaDto.builder().id(1L).build(),
                     null
             );
         });
@@ -171,69 +112,164 @@ public class SessaoServiceTest {
 
     @Test
     void votar() {
+
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
+                .thenReturn(Optional.ofNullable(null));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Sessao sessao = new Sessao();
+        sessao.setId(1L);
+        sessao.setDuracaoMinutos(10);
+        sessao.setInicioSessao(now);
+        sessao.setFimSessao(now.plusMinutes(10));
+        when(sessaoRepository.getOne(1L)).thenReturn(sessao);
+
+        Associado associado = new Associado();
+        associado.setId(1L);
+        associado.setCpf("12312312300");
+        associado.setUsuario("usuario");
+        when(associadoRepository.findByUsuario("usuario")).thenReturn(Optional.ofNullable(associado));
+        when(associadoService.podeVotar("12312312300")).thenReturn(Boolean.TRUE);
+
         sessaoService.votar(VotoDto.builder()
                 .voto(VotoEnum.SIM)
                 .cpf("12312312300")
-                .token("token")
-                .idSessao(Long.valueOf(1))
+                .usuario("usuario")
+                .idSessao(1L)
                 .build());
 
     }
 
     @Test
     void votarCpfNaoPode() {
+
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
+                .thenReturn(Optional.ofNullable(null));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Sessao sessao = new Sessao();
+        sessao.setId(1L);
+        sessao.setDuracaoMinutos(10);
+        sessao.setInicioSessao(now);
+        sessao.setFimSessao(now.plusMinutes(10));
+        when(sessaoRepository.getOne(1L)).thenReturn(sessao);
+
+        Associado associado = new Associado();
+        associado.setId(1L);
+        associado.setCpf("12312312300");
+        associado.setUsuario("usuario");
+        when(associadoRepository.findByUsuario("usuario")).thenReturn(Optional.ofNullable(associado));
+
+        when(associadoService.podeVotar("12312312311")).thenReturn(Boolean.FALSE);
+
         Assertions.assertThrows(CpfNaoPodeVotarException.class, () -> {
             sessaoService.votar(VotoDto.builder()
                     .voto(VotoEnum.SIM)
                     .cpf("12312312311")
-                    .token("token")
-                    .idSessao(Long.valueOf(1))
+                    .usuario("usuario")
+                    .idSessao(1L)
                     .build());
         });
     }
 
     @Test
     void votarCpfInvalido() {
+
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
+                .thenReturn(Optional.ofNullable(null));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Sessao sessao = new Sessao();
+        sessao.setId(1L);
+        sessao.setDuracaoMinutos(10);
+        sessao.setInicioSessao(now);
+        sessao.setFimSessao(now.plusMinutes(10));
+        when(sessaoRepository.getOne(1L)).thenReturn(sessao);
+
+        Associado associado = new Associado();
+        associado.setId(1L);
+        associado.setCpf("12312312300");
+        associado.setUsuario("usuario");
+        when(associadoRepository.findByUsuario("usuario")).thenReturn(Optional.ofNullable(associado));
+
+        when(associadoService.podeVotar("12312312322")).thenThrow(CpfInvalidoException.class);
+
         Assertions.assertThrows(CpfInvalidoException.class, () -> {
             sessaoService.votar(VotoDto.builder()
                     .voto(VotoEnum.SIM)
                     .cpf("12312312322")
-                    .token("token")
-                    .idSessao(Long.valueOf(1))
+                    .usuario("usuario")
+                    .idSessao(1L)
                     .build());
         });
     }
 
     @Test
     void votarJaComputado() {
+
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
+                .thenReturn(Optional.ofNullable(new Voto()));
+
         Assertions.assertThrows(VotoJaComputadoException.class, () -> {
             sessaoService.votar(VotoDto.builder()
                     .voto(VotoEnum.SIM)
                     .cpf("26161595036")
-                    .token("token")
-                    .idSessao(Long.valueOf(2))
+                    .usuario("usuario")
+                    .idSessao(1L)
                     .build());
         });
     }
 
     @Test
     void votarSessaoJaExpirada() {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        when(votoRepository.findBySessaoIdAndAssociadoUsuario(1L, "usuario"))
+                .thenReturn(Optional.ofNullable(null));
+        Sessao sessaoExpirada = new Sessao();
+        sessaoExpirada.setId(3L);
+        sessaoExpirada.setDuracaoMinutos(10);
+        sessaoExpirada.setInicioSessao(now.minusMinutes(20));
+        sessaoExpirada.setFimSessao(now.minusMinutes(10));
+        when(sessaoRepository.getOne(3L)).thenReturn(sessaoExpirada);
+
         Assertions.assertThrows(SessaoJaExpirouException.class, () -> {
             sessaoService.votar(VotoDto.builder()
                     .voto(VotoEnum.SIM)
                     .cpf("26161595036")
-                    .token("token")
-                    .idSessao(Long.valueOf(3))
+                    .usuario("usuario")
+                    .idSessao(3L)
                     .build());
         });
     }
 
     @Test
     void contabilizarVotos() {
-        ResultadoVotacaoDto resultadoVotacaoDto = sessaoService.contabilizarVotos(SessaoDto.builder().id(Long.valueOf(1)).build());
+
+        LocalDateTime now = LocalDateTime.now();
+        Sessao sessao = new Sessao();
+        sessao.setId(1L);
+        sessao.setDuracaoMinutos(10);
+        sessao.setInicioSessao(now);
+        sessao.setFimSessao(now.plusMinutes(10));
+        when(sessaoRepository.getOne(1L)).thenReturn(sessao);
+
+        List<Voto> votos = new ArrayList<>();
+        votos.add(new Voto(1L, now, VotoEnum.NAO, sessao, new Associado()));
+        votos.add(new Voto(2L, now, VotoEnum.NAO, sessao, new Associado()));
+        votos.add(new Voto(3L, now, VotoEnum.SIM, sessao, new Associado()));
+        votos.add(new Voto(4L, now, VotoEnum.SIM, sessao, new Associado()));
+        votos.add(new Voto(5L, now, VotoEnum.SIM, sessao, new Associado()));
+        doReturn(votos).when(votoRepository).findBySessaoId(1L);
+
+        ResultadoVotacaoDto resultadoVotacaoDto = sessaoService.contabilizarVotos(1L);
         Assertions.assertNotNull(resultadoVotacaoDto.getQuantidadeVotos());
-        Assertions.assertEquals(Long.valueOf(2), resultadoVotacaoDto.getQuantidadeVotos().get(VotoEnum.NAO));
-        Assertions.assertEquals(Long.valueOf(3), resultadoVotacaoDto.getQuantidadeVotos().get(VotoEnum.SIM));
+        Assertions.assertEquals(2L, resultadoVotacaoDto.getQuantidadeVotos().get(VotoEnum.NAO));
+        Assertions.assertEquals(3L, resultadoVotacaoDto.getQuantidadeVotos().get(VotoEnum.SIM));
         Assertions.assertEquals(now.plusMinutes(10), resultadoVotacaoDto.getEncerramento());
     }
 

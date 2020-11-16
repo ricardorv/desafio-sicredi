@@ -11,7 +11,7 @@ public class VotoDto {
     @ApiModelProperty(hidden = true)
     private Long idSessao;
     private VotoEnum voto;
-    private String token;
+    private String usuario;
     private String cpf;
 
 }
